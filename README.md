@@ -1,5 +1,7 @@
 # GeoFlex
 
+**Live app: https://bjdouget34.github.io/geoflex/**
+
 Geometry calculator for the field: right triangles, oblique triangles, circles,
 circular segments, isosceles, right and general trapezoids, and UT shear wave
 (angle beam) layouts. Enter the required number of fields and the rest fill in
