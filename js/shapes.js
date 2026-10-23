@@ -2,7 +2,7 @@
 import {
   solveRight, solveOblique, solveCircle, solveSegment,
   solveIsoTrapezoid, solveRightTrapezoid, solveTrapezoid,
-  solveShearWave, solveReflector,
+  solveShearWave, solveReflector, solvePipe,
 } from './solvers.js';
 
 const GRAY = 'var(--line)';
@@ -178,6 +178,26 @@ function shearWaveDiagram(hl, values = {}) {
   ], hl);
 }
 
+// Pipe or vessel cross-section: wall ring between the OD and ID circles.
+// Diameters run across, radii run up (OD) and down (ID), wall marked on the left.
+function pipeDiagram(hl) {
+  const cx = 50, cy = 25, R = 22, r = 15;
+  const fill = (on, id) => (on && hl === id ? HL : 'none');
+  return render([
+    { id: 'ao', svg: (c, on) => `<circle cx="${cx}" cy="${cy}" r="${R}" stroke="none" fill="${fill(on, 'ao')}"/>` },
+    { id: 'am', svg: (c, on) => `<path d="M${cx - R},${cy} a${R},${R} 0 1,0 ${2 * R},0 a${R},${R} 0 1,0 ${-2 * R},0 Z M${cx - r},${cy} a${r},${r} 0 1,0 ${2 * r},0 a${r},${r} 0 1,0 ${-2 * r},0 Z" fill-rule="evenodd" stroke="none" fill="${fill(on, 'am')}"/>` },
+    { id: 'ai', svg: (c, on) => `<circle cx="${cx}" cy="${cy}" r="${r}" stroke="none" fill="${fill(on, 'ai')}"/>` },
+    { id: ['co', 'ao', 'am'], svg: c => `<circle cx="${cx}" cy="${cy}" r="${R}" stroke="${c}"/>` },
+    { id: ['ci', 'ai', 'am'], svg: c => `<circle cx="${cx}" cy="${cy}" r="${r}" stroke="${c}"/>` },
+    line('od', [cx - R, cy], [cx + R, cy]),
+    line('id', [cx - r, cy], [cx + r, cy]),
+    line('ro', [cx, cy], [cx, cy - R]),
+    line('ri', [cx, cy], [cx, cy + r]),
+    { id: 't', svg: c => `<line x1="${cx - R}" y1="${cy}" x2="${cx - r}" y2="${cy}" stroke="${c}" stroke-width="${c === HL ? 3 : 1.3}"/>` },
+    { id: null, svg: c => `<circle cx="${cx}" cy="${cy}" r="1" fill="${c}" stroke="none"/>` },
+  ], hl, '27 2 46 46'); // square crop around the ring
+}
+
 // ---------- definitions ----------
 
 export const SHAPES = {
@@ -278,6 +298,28 @@ export const SHAPES = {
     outputRows: true,
     diagram: segmentDiagram,
     solve: solveSegment,
+  },
+  pipe: {
+    title: 'Pipe & Vessel',
+    group: 'Pipe & Vessel',
+    menu: 'OD, ID, Wall & Areas',
+    hint: 'Enter 2 Fields to Solve',
+    required: 2,
+    fields: [
+      { key: 'od', label: 'Outside Diameter', abbr: 'OD', kind: 'len' },
+      { key: 'id', label: 'Inside Diameter', abbr: 'ID', kind: 'len' },
+      { key: 't', label: 'Wall Thickness', abbr: 'Thk', kind: 'len' },
+      { key: 'co', label: 'OD Circumference', abbr: 'OD Circ', kind: 'len' },
+      { key: 'ci', label: 'ID Circumference', abbr: 'ID Circ', kind: 'len' },
+      { key: 'ro', label: 'Radius to OD', abbr: 'OD Rad', kind: 'len' },
+      { key: 'ri', label: 'Radius to ID', abbr: 'ID Rad', kind: 'len' },
+      { key: 'ao', label: 'Area to OD', abbr: 'OD Area', kind: 'area' },
+      { key: 'ai', label: 'ID Area (Bore)', abbr: 'ID Area', kind: 'area' },
+      { key: 'am', label: 'Metal Area (Wall)', abbr: 'Metal Area', kind: 'area' },
+    ],
+    outputs: [],
+    diagram: pipeDiagram,
+    solve: solvePipe,
   },
   isoTrap: {
     title: 'Isosceles Trapezoid',

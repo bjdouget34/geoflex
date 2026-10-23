@@ -320,3 +320,15 @@ output.has-value::before {
 }
 .sec-clear svg { width: 18px; height: 18px; }
 .sec-clear:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Diagram with a short label beside it (e.g. OD, Thk). */
+.diag { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.diag .diagram { flex: 1; min-width: 0; }
+.abbr {
+  flex: 0 0 58px;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--text);
+}

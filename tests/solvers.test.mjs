@@ -214,3 +214,24 @@ test('angle display forms parse back', () => {
   near(parseAngle('6/12', 'over12'), Math.atan(0.5));
   near(parseAngle(formatAngle(60 * D, 'deg', 4), 'deg'), 60 * D);
 });
+
+test('pipe / vessel, every pair', async () => {
+  const { solvePipe } = await import('../js/solvers.js');
+  const ro = 5.375, ri = 5.375 - 0.5; // 10.75" OD, 0.5" wall
+  const P = Math.PI;
+  const full = {
+    od: 2 * ro, id: 2 * ri, ro, ri, t: ro - ri,
+    co: 2 * P * ro, ci: 2 * P * ri, ao: P * ro * ro, ai: P * ri * ri, am: P * (ro * ro - ri * ri),
+  };
+  const errors = [];
+  roundTrip(solvePipe, full, Object.keys(full), 2, e => errors.push(e.combo.join(',')));
+  // Only two values from the same side (both outside or both inside) may fail.
+  const outside = ['od', 'ro', 'co', 'ao'], inside = ['id', 'ri', 'ci', 'ai'];
+  for (const e of errors) {
+    const [a, b] = e.split(',');
+    assert.ok((outside.includes(a) && outside.includes(b)) || (inside.includes(a) && inside.includes(b)), `unexpected failure ${e}`);
+  }
+  assert.equal(errors.length, 12);
+  assert.ok(solvePipe({ od: 10, t: 6 }).error);
+  assert.ok(solvePipe({ od: 10, id: 12 }).error);
+});

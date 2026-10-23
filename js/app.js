@@ -156,7 +156,7 @@ function renderShape(id) {
   let n = 0;
   const row = (f, diagram = shape.diagram) => `
     <div class="row"${shape.liveDiagram && diagram === shape.diagram ? ` data-live="${f.key}"` : ''}>
-      ${diagram(f.key)}
+      ${f.abbr ? `<div class="diag">${diagram(f.key)}<span class="abbr">${esc(f.abbr)}</span></div>` : diagram(f.key)}
       <div class="cell">
         <input id="f-${f.key}" data-key="${f.key}" type="text" inputmode="${inputMode(f.kind)}"
           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
@@ -312,7 +312,7 @@ function redrawDiagrams() {
   if (sig === current.drawn) return;
   current.drawn = sig;
   app.querySelectorAll('.row[data-live]').forEach(rowEl => {
-    rowEl.firstElementChild.outerHTML = current.shape.diagram(rowEl.dataset.live, values);
+    rowEl.querySelector('svg.diagram').outerHTML = current.shape.diagram(rowEl.dataset.live, values);
   });
 }
 

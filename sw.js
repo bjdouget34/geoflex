@@ -1,6 +1,6 @@
 // Offline support: network first so updates show immediately, cache when offline.
 // Bump VERSION whenever any of these files change so installed copies update.
-const VERSION = 'geoflex-v8';
+const VERSION = 'geoflex-v10';
 const SHELL = [
   './',
   'index.html',

@@ -409,3 +409,43 @@ export function solveReflector(main, k) {
   const sp = D / Math.cos(angle);
   return { values: { sp, sd: sp * Math.sin(angle), depth: Math.max(0, depth), leg } };
 }
+
+// ---------- pipe / vessel ----------
+// Outside family: od, ro (radius to OD), co (OD circumference), ao (area to OD).
+// Inside family: id, ri, ci, ai (bore area). Plus wall thickness t and metal area am.
+
+const OUTSIDE = { od: v => v / 2, ro: v => v, co: v => v / (2 * PI), ao: v => Math.sqrt(v / PI) };
+const INSIDE = { id: v => v / 2, ri: v => v, ci: v => v / (2 * PI), ai: v => Math.sqrt(v / PI) };
+
+export function solvePipe(k) {
+  const given = Object.keys(k).filter(key => has(k[key]));
+  for (const key of given) if (k[key] <= EPS) return fail('Values must be greater than zero.');
+  const outs = given.filter(key => key in OUTSIDE);
+  const ins = given.filter(key => key in INSIDE);
+  if (outs.length > 1) return fail('Those both describe the outside. Enter one outside value plus an inside value, wall thickness or metal area.');
+  if (ins.length > 1) return fail('Those both describe the inside. Enter one inside value plus an outside value, wall thickness or metal area.');
+
+  let ro = outs.length ? OUTSIDE[outs[0]](k[outs[0]]) : undefined;
+  let ri = ins.length ? INSIDE[ins[0]](k[ins[0]]) : undefined;
+  const { t, am } = k;
+  if (has(ro) && has(t)) ri = ro - t;
+  else if (has(ri) && has(t)) ro = ri + t;
+  else if (has(ro) && has(am)) ri = Math.sqrt(Math.max(-1, ro * ro - am / PI));
+  else if (has(ri) && has(am)) ro = Math.sqrt(ri * ri + am / PI);
+  else if (has(t) && has(am)) {
+    // ro^2 - ri^2 = (ro - ri)(ro + ri) = am / pi
+    const sum = am / (PI * t);
+    ro = (sum + t) / 2;
+    ri = (sum - t) / 2;
+  }
+  if (!has(ro) || !has(ri)) return fail('Enter two values.');
+  if (!(ri > EPS) || ro <= ri + EPS) return fail('The outside must be larger than the inside, and the wall thinner than the radius.');
+
+  return {
+    values: {
+      od: 2 * ro, id: 2 * ri, ro, ri, t: ro - ri,
+      co: 2 * PI * ro, ci: 2 * PI * ri,
+      ao: PI * ro * ro, ai: PI * ri * ri, am: PI * (ro * ro - ri * ri),
+    },
+  };
+}
